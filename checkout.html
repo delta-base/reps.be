@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>REPS. — SaaS Checkout Prototype</title>
+<style>
+  :root{
+    --bg:#F6F8FA;
+    --panel:#FFFFFF;
+    --ink:#1F2937;
+    --muted:#4B5563;
+    --line:#D8E0E6;
+    --soft:#EFF6FA;
+    --brand:#35647D;
+    --brand-hover:#2B5369;
+    --brand-pressed:#224354;
+    --brand-soft:#C5DFED;
+    --learning:#EDEBAA;
+    --rose:#EDACAF;
+    --olive:#6E6C26;
+    --success:#26734D;
+    --warning:#8A5700;
+    --shadow:0 14px 45px rgba(20,28,45,.08);
+    --radius:18px;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+  }
+  button,input,select{font:inherit}
+  button{cursor:pointer}
+  .shell{min-height:100vh}
+  .topbar{
+    height:68px; display:flex; align-items:center; justify-content:space-between;
+    padding:0 28px; border-bottom:1px solid var(--line); background:rgba(255,255,255,.92);
+    position:sticky; top:0; z-index:10; backdrop-filter:blur(12px);
+  }
+  .brand{display:flex;align-items:center;gap:10px;font-weight:850;letter-spacing:-.02em}
+  .brandmark{width:34px;height:34px;border-radius:10px;background:var(--brand);color:white;display:grid;place-items:center;font-size:14px}
+  .secure{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13px}
+  .container{max-width:1180px;margin:34px auto;padding:0 22px 48px}
+  .demo-switch{
+    display:flex;gap:6px;padding:5px;background:#eceff3;border-radius:14px;width:max-content;margin:0 auto 26px;
+  }
+  .demo-switch button{
+    border:0;background:transparent;padding:10px 16px;border-radius:10px;color:#69707c;font-weight:700;
+  }
+  .demo-switch button.active{background:#fff;color:var(--ink);box-shadow:0 2px 9px rgba(0,0,0,.07)}
+  .page{display:none}.page.active{display:block}
+  .checkout{
+    display:grid;grid-template-columns:minmax(0, .92fr) minmax(430px, 1.08fr);
+    background:var(--panel);border:1px solid var(--line);border-radius:24px;overflow:hidden;box-shadow:var(--shadow);
+  }
+  .summary{padding:42px 44px;background:#fbfbfc;border-right:1px solid var(--line);min-height:680px}
+  .pay{padding:42px 52px}
+  .eyebrow{text-transform:uppercase;font-size:12px;font-weight:800;letter-spacing:.12em;color:var(--muted);margin-bottom:12px}
+  h1{font-size:34px;line-height:1.1;letter-spacing:-.04em;margin:0 0 12px}
+  h2{font-size:23px;letter-spacing:-.025em;margin:0 0 8px}
+  h3{font-size:15px;margin:0}
+  p{margin:0;color:var(--muted);line-height:1.5}
+  .bigprice{font-size:48px;line-height:1;font-weight:850;letter-spacing:-.05em;margin:26px 0 4px}
+  .bigprice small{font-size:15px;font-weight:650;color:var(--muted);letter-spacing:0}
+  .planline,.row{display:flex;align-items:center;justify-content:space-between;gap:16px}
+  .rule{height:1px;background:var(--line);margin:24px 0}
+  .plan-card{
+    margin-top:24px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px;
+  }
+  .badge{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:999px;background:var(--learning);color:var(--ink);font-size:11px;font-weight:800}
+  .muted{color:var(--muted)} .tiny{font-size:12px}.small{font-size:13px}.strong{font-weight:800;color:var(--ink)}
+  .summary-total{font-size:19px;font-weight:850}
+  .change{border:0;background:transparent;color:#525a67;text-decoration:underline;text-underline-offset:3px;padding:0;font-weight:650}
+  .mini-plans{display:none;margin-top:14px;gap:8px}
+  .mini-plans.show{display:grid}
+  .mini-plan{border:1px solid var(--line);background:#fff;padding:12px;border-radius:12px;display:flex;justify-content:space-between;text-align:left}
+  .mini-plan.selected{border-color:var(--brand);background:var(--brand-soft);box-shadow:0 0 0 2px rgba(53,100,125,.12)}
+  .quick-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:20px 0 18px}
+  .quick{
+    height:52px;border:1px solid #0c0c0c;border-radius:10px;background:#080808;color:#fff;font-weight:800;
+  }
+  .quick.alt{background:#fff;color:var(--ink);border-color:var(--line)}
+  .quick.active{outline:3px solid rgba(53,100,125,.18);border-color:var(--brand)}
+  .quick.apple.active{outline-color:rgba(31,41,55,.14)}
+  .payment-panel{margin-top:14px}
+  .payment-note{
+    display:flex;align-items:flex-start;gap:10px;padding:14px;border:1px solid var(--line);
+    border-radius:12px;background:var(--soft);font-size:13px;color:var(--muted)
+  }
+  .payment-note b{color:var(--ink);display:block;margin-bottom:2px}
+  .hidden{display:none!important}
+  .account-editor{
+    display:none;margin-top:10px;padding:14px;border:1px solid var(--line);
+    border-radius:12px;background:#fff
+  }
+  .account-editor.show{display:block}
+  .account-editor .editor-grid{display:grid;grid-template-columns:1fr 1.5fr;gap:10px}
+  .inline-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:10px}
+  .secondary-btn,.text-btn{
+    border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink);
+    padding:9px 13px;font-weight:750
+  }
+  .secondary-btn.primary-small{background:var(--brand);color:#fff;border-color:var(--brand)}
+  .validation{font-size:11px;color:#b42318;margin-top:6px;display:none}
+  .validation.show{display:block}
+  .method-modal{
+    position:fixed;inset:0;background:rgba(31,41,55,.38);display:none;align-items:center;
+    justify-content:center;padding:20px;z-index:100
+  }
+  .method-modal.show{display:flex}
+  .modal-card{
+    width:min(520px,100%);background:#fff;border-radius:18px;border:1px solid var(--line);
+    box-shadow:0 24px 70px rgba(20,28,45,.22);padding:22px
+  }
+  .modal-head{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:12px}
+  .modal-close{border:0;background:transparent;font-size:22px;color:var(--muted);padding:2px 6px}
+  .method-options{display:grid;gap:9px;margin-top:14px}
+  .method-option{
+    border:1px solid var(--line);background:#fff;border-radius:12px;padding:14px;text-align:left;
+    display:flex;justify-content:space-between;align-items:center;gap:12px
+  }
+  .method-option:hover{border-color:var(--brand)}
+  .new-card-form{display:none;margin-top:14px}
+  .new-card-form.show{display:block}
+  .divider{display:flex;align-items:center;gap:12px;color:#9aa0aa;font-size:12px;margin:18px 0}
+  .divider:before,.divider:after{content:"";height:1px;background:var(--line);flex:1}
+  label{display:block;font-size:13px;font-weight:750;margin:14px 0 7px}
+  .field{
+    width:100%;height:49px;border:1px solid #d6dae1;border-radius:10px;background:white;padding:0 14px;outline:none;
+  }
+  .field:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(53,100,125,.14)}
+  .card-wrap{border:1px solid #d6dae1;border-radius:10px;overflow:hidden;background:#fff}
+  .card-top{display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--line)}
+  .card-top .field,.card-bottom .field{border:0;border-radius:0;box-shadow:none}
+  .card-bottom{display:grid;grid-template-columns:1fr 1fr}
+  .card-bottom .field:first-child{border-right:1px solid var(--line)}
+  .logos{margin-left:auto;padding-right:11px;color:#6b7280;font-size:11px;white-space:nowrap}
+  .accountbox{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:13px 14px;border:1px solid var(--line);border-radius:11px;background:#fafafa;margin-top:18px;
+  }
+  .accountbox .avatar{width:32px;height:32px;border-radius:50%;background:#eceff3;display:grid;place-items:center;font-weight:850}
+  .account-left{display:flex;gap:10px;align-items:center}
+  .account-meta{line-height:1.25}
+  .account-meta b{display:block;font-size:13px}
+  .account-meta span{font-size:12px;color:var(--muted)}
+  details{border-top:1px solid var(--line);margin-top:18px;padding-top:14px}
+  summary{font-size:13px;font-weight:750;color:#5e6570;cursor:pointer}
+  .business{margin-top:12px}
+  .business-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .primary{
+    width:100%;min-height:54px;border:0;border-radius:11px;background:var(--brand);color:white;
+    font-weight:850;margin-top:22px;font-size:15px;
+  }
+  .primary:hover{background:var(--brand-hover)}
+  .primary:active{background:var(--brand-pressed)}
+  .fineprint{font-size:11.5px;color:#858b95;line-height:1.45;text-align:center;margin-top:12px}
+  .trust{display:flex;justify-content:center;gap:18px;margin-top:18px;color:#858b95;font-size:11px;flex-wrap:wrap}
+  .trust span{display:flex;align-items:center;gap:5px}
+  .upgrade-compare{display:grid;grid-template-columns:1fr 34px 1fr;align-items:stretch;gap:10px;margin-top:24px}
+  .u-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px}
+  .u-card.new{border-color:var(--brand);background:var(--brand-soft);box-shadow:0 0 0 2px rgba(53,100,125,.12)}
+  .arrow{display:grid;place-items:center;color:#9aa0aa;font-size:20px}
+  .u-title{font-size:12px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.08em}
+  .u-name{font-size:19px;font-weight:850;margin:4px 0}
+  .u-price{font-size:13px;color:var(--muted)}
+  .choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:16px}
+  .choice{padding:13px;border:1px solid var(--line);border-radius:12px;background:#fff;text-align:left}
+  .choice.active{border-color:var(--brand);background:var(--brand-soft);box-shadow:0 0 0 2px rgba(53,100,125,.12)}
+  .proration{margin-top:22px;border:1px solid var(--line);border-radius:14px;padding:16px;background:#fff}
+  .proration .row{padding:7px 0}
+  .proration .row.total{border-top:1px solid var(--line);margin-top:6px;padding-top:14px;font-size:17px;font-weight:850}
+  .saved-method{
+    border:1px solid var(--line);border-radius:14px;padding:15px;margin-top:16px;display:flex;align-items:center;justify-content:space-between
+  }
+  .card-icon{width:38px;height:26px;border-radius:6px;background:#1d3f92;color:white;display:grid;place-items:center;font-size:10px;font-weight:900}
+  .saved-left{display:flex;align-items:center;gap:11px}
+  .credit-balance{padding:20px;border-radius:16px;background:var(--brand);color:white;margin:24px 0}
+  .credit-balance span{display:block;color:#c7cbd2;font-size:12px;text-transform:uppercase;letter-spacing:.1em;font-weight:800}
+  .credit-balance b{display:block;font-size:34px;margin-top:4px}
+  .topups{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:16px 0}
+  .topup{padding:15px 10px;border:1px solid var(--line);border-radius:12px;background:#fff;font-weight:850}
+  .topup.active{border-color:var(--brand);background:var(--brand-soft);box-shadow:0 0 0 2px rgba(53,100,125,.12)}
+  .auto{margin-top:18px;display:flex;gap:12px;align-items:flex-start;padding:14px;border-radius:12px;background:#fafafa;border:1px solid var(--line)}
+  .toggle{width:43px;height:24px;border-radius:999px;background:#d7dbe1;position:relative;flex:0 0 auto}
+  .toggle:after{content:"";width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:3px;left:3px;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+  .toggle.on{background:var(--success)} .toggle.on:after{left:22px}
+
+  .enterprise-hero{
+    display:flex;align-items:flex-start;justify-content:space-between;gap:18px;
+    padding:18px;border:1px solid var(--line);border-radius:16px;background:#fff;margin-top:22px
+  }
+  .enterprise-company{font-size:20px;font-weight:850;letter-spacing:-.02em}
+  .enterprise-tag{
+    display:inline-flex;align-items:center;padding:6px 9px;border-radius:999px;
+    background:var(--brand);color:#fff;font-size:10px;font-weight:850;letter-spacing:.09em
+  }
+  .enterprise-users{
+    display:flex;align-items:center;gap:9px;margin-top:16px;padding:12px 14px;
+    background:var(--brand-soft);border-radius:12px
+  }
+  .enterprise-users input{
+    width:64px;height:38px;border:1px solid rgba(53,100,125,.3);border-radius:9px;
+    text-align:center;font-weight:850;background:#fff
+  }
+  .enterprise-lines{margin-top:20px}
+  .enterprise-line{
+    display:grid;grid-template-columns:1fr auto;gap:14px;align-items:start;
+    padding:13px 0;border-bottom:1px solid var(--line)
+  }
+  .enterprise-line:last-child{border-bottom:0}
+  .enterprise-line small{display:block;color:var(--muted);margin-top:3px;line-height:1.4}
+  .enterprise-price{font-weight:850;white-space:nowrap}
+  .enterprise-total{
+    border-radius:16px;background:var(--ink);color:#fff;padding:18px;margin-top:18px
+  }
+  .enterprise-total .row{padding:6px 0}
+  .enterprise-total .muted-light{color:#cfd5dc}
+  .enterprise-total .grand{
+    margin-top:8px;padding-top:14px;border-top:1px solid rgba(255,255,255,.18);
+    font-size:20px;font-weight:850
+  }
+  .invoice-box{
+    margin-top:18px;padding:15px;border:1px solid var(--line);border-radius:14px;background:#fafbfc
+  }
+  .invoice-options{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}
+  .enterprise-edit-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .enterprise-summary-card{
+    border:1px solid var(--line);border-radius:14px;padding:16px;background:#fff;margin-top:16px
+  }
+
+  .success-toast{
+    position:fixed;right:22px;bottom:22px;background:#0d1823;color:white;padding:14px 18px;border-radius:12px;
+    box-shadow:var(--shadow);display:none;max-width:360px;z-index:50
+  }
+  .success-toast.show{display:block}
+  .footnote{margin-top:14px;padding:12px;border-radius:10px;background:#FFF4DB;color:#8A5700;font-size:12px;line-height:1.45}
+  @media (max-width:850px){
+    .checkout{grid-template-columns:1fr}
+    .summary{border-right:0;border-bottom:1px solid var(--line);min-height:auto;padding:28px 24px}
+    .pay{padding:28px 24px}
+    .upgrade-compare{grid-template-columns:1fr}.arrow{transform:rotate(90deg);height:22px}
+    .business-grid{grid-template-columns:1fr}
+    .account-editor .editor-grid{grid-template-columns:1fr}
+    .enterprise-edit-grid,.invoice-options{grid-template-columns:1fr}
+    .quick-grid{grid-template-columns:1fr}
+    .topups{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+  <header class="topbar">
+    <div class="brand"><div class="brandmark">R.</div> REPS.</div>
+    <div class="secure">🔒 Secure checkout · Payments processed by Stripe</div>
+  </header>
+
+  <main class="container">
+    <div class="demo-switch">
+      <button class="active" data-target="new">New subscription</button>
+      <button data-target="upgrade">Upgrade plan</button>
+      <button data-target="topup">Top up</button>
+      <button data-target="enterprise">ENTERPRISE</button>
+    </div>
+
+    <!-- NEW SUBSCRIPTION -->
+    <section class="page active" id="new">
+      <div class="checkout">
+        <aside class="summary">
+          <div class="eyebrow">Your plan</div>
+          <h1>3 months of deliberate practice.</h1>
+          <p>Your onboarding choices are already saved. Complete payment and your personal training plan becomes active immediately.</p>
+          <div class="bigprice">€99.99 <small>/ first 3 months</small></div>
+          <p class="small" style="margin:8px 0 10px">Launch price today. Regular renewal price applies from the next billing period.</p>
+          <div class="badge">MOST POPULAR · LAUNCH OFFER</div>
+
+          <div class="plan-card">
+            <div class="planline">
+              <div>
+                <div class="strong">REPS. · 3 months</div>
+                <div class="tiny muted">Full personal practice access</div>
+              </div>
+              <button class="change" id="changePlan">Change</button>
+            </div>
+            <div class="mini-plans" id="miniPlans">
+              <button class="mini-plan" data-name="4 weeks" data-price="49.99" data-renewal="99.98" data-cycle="4 weeks">
+                <span><b>4 weeks</b><br><span class="tiny muted">€1.79/day</span></span><b>€49.99</b>
+              </button>
+              <button class="mini-plan selected" data-name="3 months" data-price="99.99" data-renewal="149.97" data-cycle="3 months">
+                <span><b>3 months</b><br><span class="tiny muted">Save 33%</span></span><b>€99.99</b>
+              </button>
+              <button class="mini-plan" data-name="1 year" data-price="249.99" data-renewal="649.87" data-cycle="year">
+                <span><b>1 year</b><br><span class="tiny muted">Best value · Save 62%</span></span><b>€249.99</b>
+              </button>
+            </div>
+          </div>
+
+          <div class="rule"></div>
+          <div class="row small"><span>Subtotal</span><span id="sumSubtotal">€99.99</span></div>
+          <div class="row small" style="margin-top:10px"><span>VAT</span><span>Included where applicable</span></div>
+          <div class="rule"></div>
+          <div class="row"><span class="summary-total">Total today</span><span class="summary-total" id="sumTotal">€99.99</span></div>
+          <p class="tiny" style="margin-top:10px">Then <strong id="renewText" style="color:var(--ink)">€149.97 every 3 months</strong> until cancelled.</p>
+        </aside>
+
+        <div class="pay">
+          <div class="eyebrow">Checkout</div>
+          <h2>Complete your purchase</h2>
+          <p class="small">Fast, secure and no extra account setup.</p>
+
+          <div class="accountbox">
+            <div class="account-left">
+              <div class="avatar" id="accountInitials">JS</div>
+              <div class="account-meta"><b id="accountEmail">joris@example.com</b><span>Your account email</span></div>
+            </div>
+            <button class="change" id="editAccount">Edit</button>
+          </div>
+
+          <div class="account-editor" id="accountEditor">
+            <div class="editor-grid">
+              <div>
+                <label style="margin-top:0">Name</label>
+                <input class="field" id="accountNameInput" value="Joris Swinnen"/>
+              </div>
+              <div>
+                <label style="margin-top:0">Account email</label>
+                <input class="field" id="accountEmailInput" type="email" value="joris@example.com"/>
+                <div class="validation" id="emailValidation">Enter a valid email address.</div>
+              </div>
+            </div>
+            <div class="inline-actions">
+              <button class="secondary-btn" id="cancelAccountEdit">Cancel</button>
+              <button class="secondary-btn primary-small" id="saveAccountEdit">Save changes</button>
+            </div>
+          </div>
+
+          <div class="quick-grid" id="quickPayGrid">
+            <button class="quick apple" data-wallet="Apple Pay"> Pay</button>
+            <button class="quick alt" data-wallet="Google Pay">Google Pay</button>
+            <button class="quick alt" data-wallet="Link">Pay with Link</button>
+          </div>
+
+          <div class="payment-note hidden" id="walletPanel">
+            <span>✓</span>
+            <div><b id="walletTitle">Apple Pay selected</b><span id="walletText">The secure wallet sheet will open after you continue.</span></div>
+          </div>
+
+          <div class="divider">or choose another method</div>
+
+          <label>Payment method</label>
+          <div class="choice-grid" id="manualMethods">
+            <button class="choice active" data-method="card">💳 Card</button>
+            <button class="choice" data-method="bancontact">🇧🇪 Bancontact</button>
+          </div>
+
+          <div class="payment-panel" id="cardPaymentPanel">
+            <label>Card information</label>
+            <div class="card-wrap">
+              <div class="card-top">
+                <input class="field" id="cardNumber" inputmode="numeric" autocomplete="cc-number" placeholder="1234 1234 1234 1234"/>
+                <div class="logos">VISA · MC · AMEX</div>
+              </div>
+              <div class="card-bottom">
+                <input class="field" id="cardExpiry" autocomplete="cc-exp" placeholder="MM / YY"/>
+                <input class="field" id="cardCvc" inputmode="numeric" autocomplete="cc-csc" placeholder="CVC"/>
+              </div>
+            </div>
+
+            <label>Name on card</label>
+            <input class="field" id="cardholderName" autocomplete="cc-name" placeholder="Name as shown on card"/>
+          </div>
+
+          <div class="payment-panel hidden" id="bancontactPanel">
+            <div class="payment-note">
+              <span>🇧🇪</span>
+              <div><b>Bancontact</b><span>You’ll continue to Bancontact to authorize the payment, then return to REPS. automatically.</span></div>
+            </div>
+          </div>
+
+          <details>
+            <summary>Buying for a business? Add company & VAT number</summary>
+            <div class="business">
+              <div class="business-grid">
+                <div><label>Company</label><input class="field" placeholder="Company name"/></div>
+                <div><label>VAT number</label><input class="field" placeholder="BE 0123.456.789"/></div>
+              </div>
+            </div>
+          </details>
+
+          <details>
+            <summary>Have a promo code?</summary>
+            <div style="margin-top:10px"><input class="field" placeholder="Promo code"/></div>
+          </details>
+
+          <button class="primary" id="newPay">Start 3 months · Pay €99.99</button>
+          <div class="fineprint">By confirming, you authorize recurring charges according to the selected billing period. You can manage or cancel your subscription from your account before the next renewal.</div>
+          <div class="trust"><span>🔒 Encrypted payment</span><span>✓ No hidden fees</span><span>↻ Manage subscription anytime</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- UPGRADE -->
+    <section class="page" id="upgrade">
+      <div class="checkout">
+        <aside class="summary">
+          <div class="eyebrow">Upgrade</div>
+          <h1>See the change before you confirm it.</h1>
+          <p>No new checkout. Your saved payment method stays in place, and the price impact is shown before you upgrade.</p>
+
+          <div class="upgrade-compare">
+            <div class="u-card">
+              <div class="u-title">Current</div>
+              <div class="u-name">4 weeks</div>
+              <div class="u-price">€49.99 / 4 weeks</div>
+            </div>
+            <div class="arrow">→</div>
+            <div class="u-card new">
+              <div class="u-title">New plan</div>
+              <div class="u-name" id="upName">3 months</div>
+              <div class="u-price" id="upPrice">€99.99 / 3 months</div>
+            </div>
+          </div>
+
+          <div class="choice-grid">
+            <button class="choice active up-choice" data-name="3 months" data-price="99.99" data-cycle="3 months">3 months<br><span class="tiny muted">Save 33%</span></button>
+            <button class="choice up-choice" data-name="1 year" data-price="249.99" data-cycle="year">1 year<br><span class="tiny muted">Save 62%</span></button>
+          </div>
+
+          <div class="proration">
+            <div class="row small"><span>New plan</span><span id="prNew">€99.99</span></div>
+            <div class="row small"><span>Unused time credit</span><span>− €17.85</span></div>
+            <div class="row total"><span>Due today</span><span id="prToday">€82.14</span></div>
+          </div>
+          <div class="footnote">Prototype example: the final proration should always come from Stripe’s invoice preview, not from a front-end estimate.</div>
+        </aside>
+
+        <div class="pay">
+          <div class="eyebrow">Confirm upgrade</div>
+          <h2>Your payment details are already saved</h2>
+          <p class="small">Keep the friction low for returning customers.</p>
+
+          <div class="saved-method" id="upgradeSavedMethod">
+            <div class="saved-left">
+              <div class="card-icon" id="upgradeMethodIcon">VISA</div>
+              <div><b id="upgradeMethodName">•••• 4242</b><div class="tiny muted" id="upgradeMethodMeta">Expires 04/29</div></div>
+            </div>
+            <button class="change saved-change" data-context="upgrade">Change</button>
+          </div>
+
+          <div class="rule"></div>
+          <div class="row small"><span>Upgrade effective</span><b>Immediately</b></div>
+          <div class="row small" style="margin-top:12px"><span>Charge today</span><b id="chargeToday">€82.14</b></div>
+          <div class="row small" style="margin-top:12px"><span id="nextLabel">Next renewal</span><b id="nextAmount">€99.99</b></div>
+          <p class="tiny" style="margin-top:8px">Your new billing period starts today. Exact renewal date is shown in your account and receipt.</p>
+
+          <button class="primary" id="upgradePay">Confirm upgrade · Pay €82.14</button>
+          <div class="fineprint">You will see the exact proration before the update is committed. No duplicate subscription is created.</div>
+          <div class="trust"><span>✓ Existing account</span><span>✓ Saved payment method</span><span>↻ Manage plan anytime</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TOP UP -->
+    <section class="page" id="topup">
+      <div class="checkout">
+        <aside class="summary">
+          <div class="eyebrow">Top up</div>
+          <h1>Add usage credit without changing your plan.</h1>
+          <p>Top-ups are one-time purchases. Keep recurring plan changes separate from extra usage so the user always knows what will happen.</p>
+
+          <div class="credit-balance">
+            <span>Current usage balance</span>
+            <b>€7.40</b>
+          </div>
+
+          <h3>Choose top-up amount</h3>
+          <div class="topups">
+            <button class="topup" data-amount="10">€10</button>
+            <button class="topup active" data-amount="25">€25</button>
+            <button class="topup" data-amount="50">€50</button>
+          </div>
+          <label>Or enter another amount</label>
+          <input class="field" id="customAmount" inputmode="decimal" placeholder="€ 25.00"/>
+
+          <div class="rule"></div>
+          <div class="row small"><span>Top-up</span><span id="topSummary">€25.00</span></div>
+          <div class="row small" style="margin-top:10px"><span>New balance</span><b id="newBalance">€32.40</b></div>
+          <div class="row" style="margin-top:18px"><span class="summary-total">Total today</span><span class="summary-total" id="topTotal">€25.00</span></div>
+        </aside>
+
+        <div class="pay">
+          <div class="eyebrow">One-time payment</div>
+          <h2>Top up instantly</h2>
+          <p class="small">Your subscription and renewal date stay unchanged.</p>
+
+          <div class="saved-method" id="topupSavedMethod">
+            <div class="saved-left">
+              <div class="card-icon" id="topupMethodIcon">VISA</div>
+              <div><b id="topupMethodName">•••• 4242</b><div class="tiny muted" id="topupMethodMeta">Default payment method</div></div>
+            </div>
+            <button class="change saved-change" data-context="topup">Change</button>
+          </div>
+
+          <div class="auto">
+            <button class="toggle" id="autoToggle" aria-label="Toggle auto top up"></button>
+            <div>
+              <b style="font-size:13px">Optional auto top-up</b>
+              <p class="tiny">When balance falls below €5, automatically add €25. Off by default.</p>
+            </div>
+          </div>
+
+          <button class="primary" id="topPay">Add €25.00 credit</button>
+          <div class="fineprint">This is a one-time charge. Auto top-up is only enabled if you explicitly switch it on.</div>
+          <div class="trust"><span>✓ One-time purchase</span><span>✓ Plan unchanged</span><span>🔒 Secure payment</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ENTERPRISE -->
+    <section class="page" id="enterprise">
+      <div class="checkout">
+        <aside class="summary">
+          <div class="eyebrow">Enterprise agreement</div>
+          <h1>Custom team access with implementation support.</h1>
+          <p>Transparent pricing for software, team analytics and the one-time implementation programme.</p>
+
+          <div class="enterprise-hero">
+            <div>
+              <div class="enterprise-company" id="enterpriseCompanyDisplay">Acme Corp</div>
+              <div class="small muted">Custom Pricing</div>
+            </div>
+            <div class="enterprise-tag">ENTERPRISE — <span id="enterpriseUsersBadge">&nbsp;5 users</span></div>
+          </div>
+
+          <div class="enterprise-users">
+            <div style="flex:1">
+              <b style="font-size:13px">Licensed users</b>
+              <div class="tiny muted">Adjust seats to preview the commercial impact.</div>
+            </div>
+            <input id="enterpriseUsers" type="number" min="1" max="500" value="5"/>
+          </div>
+
+          <div class="enterprise-lines">
+            <div class="enterprise-line">
+              <div>
+                <b>Base platform</b>
+                <small>€49.99 / user / month</small>
+              </div>
+              <div class="enterprise-price" id="enterpriseBaseAnnual">€2,999.40/year</div>
+            </div>
+            <div class="enterprise-line">
+              <div>
+                <b>Team AI Analytics</b>
+                <small>€10 / user / month</small>
+              </div>
+              <div class="enterprise-price" id="enterpriseAnalyticsAnnual">€600.00/year</div>
+            </div>
+            <div class="enterprise-line">
+              <div>
+                <b>Implementation, facilitation &amp; anchoring</b>
+                <small>One-time onboarding and adoption programme</small>
+              </div>
+              <div class="enterprise-price">€5,000.00</div>
+            </div>
+          </div>
+
+          <div class="enterprise-total">
+            <div class="row">
+              <span class="muted-light">Recurring annual subscription</span>
+              <b id="enterpriseRecurring">€3,599.40</b>
+            </div>
+            <div class="row grand">
+              <span>True Year-1 total</span>
+              <span id="enterpriseYear1">€8,599.40</span>
+            </div>
+            <div class="row" style="padding-top:10px">
+              <span class="muted-light">As from following Year total</span>
+              <b id="enterpriseFollowing">€3,599.40/year</b>
+            </div>
+          </div>
+        </aside>
+
+        <div class="pay">
+          <div class="eyebrow">Enterprise checkout</div>
+          <h2>Confirm organisation &amp; billing details</h2>
+          <p class="small">Designed for invoice/card-based B2B activation rather than a consumer subscription checkout.</p>
+
+          <div class="enterprise-summary-card">
+            <div class="enterprise-edit-grid">
+              <div>
+                <label style="margin-top:0">Company</label>
+                <input class="field" id="enterpriseCompany" value="Acme Corp"/>
+              </div>
+              <div>
+                <label style="margin-top:0">Billing contact</label>
+                <input class="field" id="enterpriseBillingEmail" type="email" value="finance@acme.example"/>
+              </div>
+              <div>
+                <label>VAT number</label>
+                <input class="field" id="enterpriseVat" value="BE 0123.456.789"/>
+              </div>
+              <div>
+                <label>PO / reference</label>
+                <input class="field" id="enterprisePO" placeholder="Optional"/>
+              </div>
+            </div>
+          </div>
+
+          <div class="invoice-box">
+            <b style="font-size:13px">Payment preference</b>
+            <p class="tiny" style="margin-top:4px">Choose how the enterprise agreement should be settled.</p>
+            <div class="invoice-options" id="enterprisePayOptions">
+              <button class="choice active" data-enterprise-pay="invoice">Invoice / bank transfer</button>
+              <button class="choice" data-enterprise-pay="card">Corporate card</button>
+            </div>
+          </div>
+
+          <div class="payment-panel hidden" id="enterpriseCardPanel">
+            <label>Corporate card</label>
+            <div class="card-wrap">
+              <div class="card-top">
+                <input class="field" id="enterpriseCardNumber" inputmode="numeric" placeholder="1234 1234 1234 1234"/>
+                <div class="logos">VISA · MC · AMEX</div>
+              </div>
+              <div class="card-bottom">
+                <input class="field" id="enterpriseCardExpiry" placeholder="MM / YY"/>
+                <input class="field" id="enterpriseCardCvc" inputmode="numeric" placeholder="CVC"/>
+              </div>
+            </div>
+          </div>
+
+          <div class="rule"></div>
+          <div class="row small"><span>Annual subscription</span><b id="enterpriseCheckoutRecurring">€3,599.40</b></div>
+          <div class="row small" style="margin-top:12px"><span>One-time implementation</span><b>€5,000.00</b></div>
+          <div class="row" style="margin-top:16px"><span class="summary-total">Year-1 total</span><span class="summary-total" id="enterpriseCheckoutYear1">€8,599.40</span></div>
+
+          <button class="primary" id="enterpriseConfirm">Confirm enterprise order · €8,599.40</button>
+          <div class="fineprint">Prototype only. In production, enterprise terms, VAT treatment, invoice due date and any signed order form should be confirmed before activation.</div>
+          <div class="trust"><span>✓ 5-user team plan</span><span>✓ Annual recurring subscription</span><span>✓ One-time implementation</span></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+
+<div class="method-modal" id="methodModal" aria-hidden="true">
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="methodModalTitle">
+    <div class="modal-head">
+      <div>
+        <div class="eyebrow" style="margin-bottom:5px">Payment method</div>
+        <h2 id="methodModalTitle">Choose how to pay</h2>
+      </div>
+      <button class="modal-close" id="closeMethodModal" aria-label="Close">×</button>
+    </div>
+    <p class="small">This prototype updates the selected method locally.</p>
+
+    <div class="method-options">
+      <button class="method-option" data-saved-method="visa">
+        <span><b>Visa •••• 4242</b><br><span class="tiny muted">Expires 04/29</span></span>
+        <span>Saved</span>
+      </button>
+      <button class="method-option" data-saved-method="bancontact">
+        <span><b>🇧🇪 Bancontact</b><br><span class="tiny muted">Authorize when you confirm</span></span>
+        <span>→</span>
+      </button>
+      <button class="method-option" data-saved-method="newcard">
+        <span><b>Use another card</b><br><span class="tiny muted">Add a new payment card</span></span>
+        <span>＋</span>
+      </button>
+    </div>
+
+    <div class="new-card-form" id="newCardForm">
+      <label>Card number</label>
+      <input class="field" id="modalCardNumber" inputmode="numeric" placeholder="1234 1234 1234 1234"/>
+      <div class="business-grid">
+        <div><label>Expiry</label><input class="field" id="modalCardExpiry" placeholder="MM / YY"/></div>
+        <div><label>CVC</label><input class="field" id="modalCardCvc" inputmode="numeric" placeholder="CVC"/></div>
+      </div>
+      <div class="validation" id="cardValidation">Enter at least 12 card digits.</div>
+      <div class="inline-actions">
+        <button class="secondary-btn" id="cancelNewCard">Cancel</button>
+        <button class="secondary-btn primary-small" id="saveNewCard">Save card</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="success-toast" id="toast"><b>Prototype only</b><br><span class="tiny">This button simulates the confirmation step. Connect the production CTA to Stripe Checkout / Billing.</span></div>
+
+<script>
+  const fmt = v => new Intl.NumberFormat('en-BE',{style:'currency',currency:'EUR'}).format(v);
+  const pages = [...document.querySelectorAll('.page')];
+
+  let checkoutState = {
+    price: 99.99,
+    renewal: 149.97,
+    planName: '3 months',
+    cycle: '3 months',
+    paymentMethod: 'card'
+  };
+
+  function showToast(title='Prototype updated', text='Your selection was saved locally for this prototype.'){
+    const toast = document.getElementById('toast');
+    toast.innerHTML = `<b>${title}</b><br><span class="tiny">${text}</span>`;
+    toast.classList.add('show');
+    clearTimeout(window.__toastTimer);
+    window.__toastTimer = setTimeout(()=>toast.classList.remove('show'),3200);
+  }
+
+  function updateCheckoutCTA(){
+    const btn = document.getElementById('newPay');
+    const amount = fmt(checkoutState.price);
+    if(checkoutState.paymentMethod === 'bancontact'){
+      btn.textContent = `Continue with Bancontact · ${amount}`;
+    } else if(['Apple Pay','Google Pay','Link'].includes(checkoutState.paymentMethod)){
+      btn.textContent = `Pay ${amount} with ${checkoutState.paymentMethod}`;
+    } else {
+      btn.textContent = `Start ${checkoutState.planName} · Pay ${amount}`;
+    }
+  }
+
+  // Page switch
+  document.querySelectorAll('.demo-switch button').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('.demo-switch button').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      pages.forEach(p=>p.classList.toggle('active',p.id===btn.dataset.target));
+      window.scrollTo({top:0,behavior:'smooth'});
+    });
+  });
+
+  // Account editing
+  const editor = document.getElementById('accountEditor');
+  const emailInput = document.getElementById('accountEmailInput');
+  const nameInput = document.getElementById('accountNameInput');
+  const emailValidation = document.getElementById('emailValidation');
+  let savedAccount = {name:nameInput.value, email:emailInput.value};
+
+  document.getElementById('editAccount').addEventListener('click',()=>{
+    editor.classList.toggle('show');
+    if(editor.classList.contains('show')) emailInput.focus();
+  });
+
+  document.getElementById('cancelAccountEdit').addEventListener('click',()=>{
+    nameInput.value = savedAccount.name;
+    emailInput.value = savedAccount.email;
+    emailValidation.classList.remove('show');
+    editor.classList.remove('show');
+  });
+
+  document.getElementById('saveAccountEdit').addEventListener('click',()=>{
+    const email = emailInput.value.trim();
+    const name = nameInput.value.trim() || 'JS';
+    const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    emailValidation.classList.toggle('show', !valid);
+    if(!valid) return;
+
+    savedAccount = {name,email};
+    document.getElementById('accountEmail').textContent = email;
+    const initials = name.split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase() || 'JS';
+    document.getElementById('accountInitials').textContent = initials;
+    editor.classList.remove('show');
+    showToast('Account details updated', email);
+  });
+
+  // Plan selection
+  const changePlan = document.getElementById('changePlan');
+  changePlan.addEventListener('click',()=>document.getElementById('miniPlans').classList.toggle('show'));
+
+  document.querySelectorAll('.mini-plan').forEach(b=>b.addEventListener('click',()=>{
+    document.querySelectorAll('.mini-plan').forEach(x=>x.classList.remove('selected'));
+    b.classList.add('selected');
+
+    const p=+b.dataset.price;
+    const renewal=+(b.dataset.renewal || b.dataset.price);
+    const name=b.dataset.name;
+    const cycle=b.dataset.cycle;
+
+    checkoutState.price = p;
+    checkoutState.renewal = renewal;
+    checkoutState.planName = name;
+    checkoutState.cycle = cycle;
+
+    document.querySelector('#new .bigprice').innerHTML=`${fmt(p)} <small>/ first ${cycle}</small>`;
+    document.getElementById('sumSubtotal').textContent=fmt(p);
+    document.getElementById('sumTotal').textContent=fmt(p);
+    document.getElementById('renewText').textContent=`${fmt(renewal)} every ${cycle}`;
+    document.querySelector('#new .plan-card .strong').textContent=`REPS. · ${name}`;
+    updateCheckoutCTA();
+  }));
+
+  // Payment method selection
+  const cardPanel = document.getElementById('cardPaymentPanel');
+  const bancontactPanel = document.getElementById('bancontactPanel');
+  const walletPanel = document.getElementById('walletPanel');
+  const walletTitle = document.getElementById('walletTitle');
+  const walletText = document.getElementById('walletText');
+
+  function selectPayment(method){
+    checkoutState.paymentMethod = method;
+
+    document.querySelectorAll('[data-wallet]').forEach(b=>b.classList.toggle('active', b.dataset.wallet===method));
+    document.querySelectorAll('#manualMethods [data-method]').forEach(b=>{
+      const matches = (method==='card' && b.dataset.method==='card') || (method==='bancontact' && b.dataset.method==='bancontact');
+      b.classList.toggle('active', matches);
+    });
+
+    const isWallet = ['Apple Pay','Google Pay','Link'].includes(method);
+    cardPanel.classList.toggle('hidden', method!=='card');
+    bancontactPanel.classList.toggle('hidden', method!=='bancontact');
+    walletPanel.classList.toggle('hidden', !isWallet);
+
+    if(isWallet){
+      walletTitle.textContent = `${method} selected`;
+      walletText.textContent = method === 'Link'
+        ? 'Stripe Link will use saved checkout details where available.'
+        : `The secure ${method} sheet will open after you continue.`;
+    }
+    updateCheckoutCTA();
+  }
+
+  document.querySelectorAll('[data-wallet]').forEach(btn=>{
+    btn.addEventListener('click',()=>selectPayment(btn.dataset.wallet));
+  });
+  document.querySelectorAll('#manualMethods [data-method]').forEach(btn=>{
+    btn.addEventListener('click',()=>selectPayment(btn.dataset.method));
+  });
+
+  // Light formatting for card fields
+  document.getElementById('cardNumber').addEventListener('input',e=>{
+    const digits=e.target.value.replace(/\D/g,'').slice(0,19);
+    e.target.value=digits.replace(/(.{4})/g,'$1 ').trim();
+  });
+  document.getElementById('cardExpiry').addEventListener('input',e=>{
+    const digits=e.target.value.replace(/\D/g,'').slice(0,4);
+    e.target.value=digits.length>2 ? digits.slice(0,2)+' / '+digits.slice(2) : digits;
+  });
+  document.getElementById('cardCvc').addEventListener('input',e=>{
+    e.target.value=e.target.value.replace(/\D/g,'').slice(0,4);
+  });
+
+  // Upgrade selection
+  document.querySelectorAll('.up-choice').forEach(b=>b.addEventListener('click',()=>{
+    document.querySelectorAll('.up-choice').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    const p=+b.dataset.price, name=b.dataset.name, cycle=b.dataset.cycle;
+    const credit=17.85, today=Math.max(0,p-credit);
+    document.getElementById('upName').textContent=name;
+    document.getElementById('upPrice').textContent=`${fmt(p)} / ${cycle}`;
+    document.getElementById('prNew').textContent=fmt(p);
+    document.getElementById('prToday').textContent=fmt(today);
+    document.getElementById('chargeToday').textContent=fmt(today);
+    document.getElementById('nextAmount').textContent=`${fmt(p)} / ${cycle}`;
+    document.getElementById('upgradePay').textContent=`Confirm upgrade · Pay ${fmt(today)}`;
+  }));
+
+  // Reusable saved-payment-method editor
+  const modal = document.getElementById('methodModal');
+  const newCardForm = document.getElementById('newCardForm');
+  const cardValidation = document.getElementById('cardValidation');
+  let methodContext = null;
+
+  function openMethodModal(context){
+    methodContext = context;
+    newCardForm.classList.remove('show');
+    cardValidation.classList.remove('show');
+    modal.classList.add('show');
+    modal.setAttribute('aria-hidden','false');
+  }
+  function closeMethodModal(){
+    modal.classList.remove('show');
+    modal.setAttribute('aria-hidden','true');
+    methodContext = null;
+  }
+  document.querySelectorAll('.saved-change').forEach(btn=>btn.addEventListener('click',()=>openMethodModal(btn.dataset.context)));
+  document.getElementById('closeMethodModal').addEventListener('click',closeMethodModal);
+  modal.addEventListener('click',e=>{ if(e.target===modal) closeMethodModal(); });
+
+  function updateSavedMethod(type, last4='4242'){
+    if(!methodContext) return;
+    const prefix = methodContext;
+    const icon = document.getElementById(`${prefix}MethodIcon`);
+    const name = document.getElementById(`${prefix}MethodName`);
+    const meta = document.getElementById(`${prefix}MethodMeta`);
+
+    if(type==='bancontact'){
+      icon.textContent='BC';
+      icon.style.background='var(--brand)';
+      name.textContent='Bancontact';
+      meta.textContent='Authorize when you confirm';
+    } else {
+      icon.textContent='VISA';
+      icon.style.background='#1d3f92';
+      name.textContent=`•••• ${last4}`;
+      meta.textContent=prefix==='upgrade' ? 'Expires 04/29' : 'Default payment method';
+    }
+    showToast('Payment method updated', type==='bancontact' ? 'Bancontact selected.' : `Card ending ${last4} selected.`);
+    closeMethodModal();
+  }
+
+  document.querySelectorAll('[data-saved-method]').forEach(btn=>btn.addEventListener('click',()=>{
+    const type=btn.dataset.savedMethod;
+    if(type==='newcard'){
+      newCardForm.classList.add('show');
+      document.getElementById('modalCardNumber').focus();
+      return;
+    }
+    updateSavedMethod(type);
+  }));
+
+  document.getElementById('cancelNewCard').addEventListener('click',()=>{
+    newCardForm.classList.remove('show');
+    cardValidation.classList.remove('show');
+  });
+  document.getElementById('saveNewCard').addEventListener('click',()=>{
+    const raw=document.getElementById('modalCardNumber').value.replace(/\D/g,'');
+    if(raw.length<12){
+      cardValidation.classList.add('show');
+      return;
+    }
+    cardValidation.classList.remove('show');
+    updateSavedMethod('card', raw.slice(-4));
+  });
+
+  // Top-up
+  let topAmount=25;
+  function setTop(amount){
+    topAmount=amount;
+    document.querySelectorAll('.topup').forEach(x=>x.classList.toggle('active',+x.dataset.amount===amount));
+    document.getElementById('topSummary').textContent=fmt(amount);
+    document.getElementById('topTotal').textContent=fmt(amount);
+    document.getElementById('newBalance').textContent=fmt(7.40+amount);
+    document.getElementById('topPay').textContent=`Add ${fmt(amount)} credit`;
+  }
+  document.querySelectorAll('.topup').forEach(b=>b.addEventListener('click',()=>setTop(+b.dataset.amount)));
+  document.getElementById('customAmount').addEventListener('input',e=>{
+    let v=parseFloat(e.target.value.replace(',','.').replace(/[^\d.]/g,''));
+    if(!isNaN(v) && v>0) setTop(v);
+  });
+
+  document.getElementById('autoToggle').addEventListener('click',e=>{
+    e.currentTarget.classList.toggle('on');
+    e.currentTarget.setAttribute('aria-pressed', e.currentTarget.classList.contains('on') ? 'true' : 'false');
+  });
+
+  // Confirmation simulations
+  document.getElementById('newPay').addEventListener('click',()=>{
+    const method=checkoutState.paymentMethod;
+    showToast(
+      method==='bancontact' ? 'Redirecting to Bancontact…' : `${method==='card'?'Card':method} checkout ready`,
+      `Prototype: ${fmt(checkoutState.price)} today. Renewal: ${fmt(checkoutState.renewal)} every ${checkoutState.cycle}.`
+    );
+  });
+  document.getElementById('upgradePay').addEventListener('click',()=>{
+    showToast('Upgrade confirmation ready','Prototype: the selected plan and payment method would now be sent to Stripe Billing.');
+  });
+  document.getElementById('topPay').addEventListener('click',()=>{
+    showToast('Top-up confirmation ready',`Prototype: ${fmt(topAmount)} would be charged as a one-time payment.`);
+  });
+
+
+  // Enterprise pricing & controls
+  const enterprise = {
+    users: 5,
+    baseMonthly: 49.99,
+    analyticsMonthly: 10,
+    implementation: 5000,
+    payMethod: 'invoice'
+  };
+
+  function updateEnterprise(){
+    const users = Math.max(1, parseInt(document.getElementById('enterpriseUsers').value || '1',10));
+    enterprise.users = users;
+    const baseAnnual = enterprise.baseMonthly * users * 12;
+    const analyticsAnnual = enterprise.analyticsMonthly * users * 12;
+    const recurring = baseAnnual + analyticsAnnual;
+    const year1 = recurring + enterprise.implementation;
+
+    document.getElementById('enterpriseUsersBadge').textContent = ` ${users} user${users===1?'':'s'}`;
+    document.getElementById('enterpriseBaseAnnual').textContent = `${fmt(baseAnnual)}/year`;
+    document.getElementById('enterpriseAnalyticsAnnual').textContent = `${fmt(analyticsAnnual)}/year`;
+    document.getElementById('enterpriseRecurring').textContent = fmt(recurring);
+    document.getElementById('enterpriseYear1').textContent = fmt(year1);
+    document.getElementById('enterpriseFollowing').textContent = `${fmt(recurring)}/year`;
+    document.getElementById('enterpriseCheckoutRecurring').textContent = fmt(recurring);
+    document.getElementById('enterpriseCheckoutYear1').textContent = fmt(year1);
+    document.getElementById('enterpriseConfirm').textContent =
+      enterprise.payMethod === 'invoice'
+        ? `Confirm enterprise order · ${fmt(year1)}`
+        : `Pay Year-1 total · ${fmt(year1)}`;
+  }
+
+  document.getElementById('enterpriseUsers').addEventListener('input', updateEnterprise);
+
+  document.getElementById('enterpriseCompany').addEventListener('input', e=>{
+    document.getElementById('enterpriseCompanyDisplay').textContent = e.target.value.trim() || 'Company';
+  });
+
+  document.querySelectorAll('[data-enterprise-pay]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('[data-enterprise-pay]').forEach(x=>x.classList.remove('active'));
+      btn.classList.add('active');
+      enterprise.payMethod = btn.dataset.enterprisePay;
+      document.getElementById('enterpriseCardPanel').classList.toggle('hidden', enterprise.payMethod!=='card');
+      updateEnterprise();
+    });
+  });
+
+  document.getElementById('enterpriseCardNumber').addEventListener('input',e=>{
+    const digits=e.target.value.replace(/\D/g,'').slice(0,19);
+    e.target.value=digits.replace(/(.{4})/g,'$1 ').trim();
+  });
+  document.getElementById('enterpriseCardExpiry').addEventListener('input',e=>{
+    const digits=e.target.value.replace(/\D/g,'').slice(0,4);
+    e.target.value=digits.length>2 ? digits.slice(0,2)+' / '+digits.slice(2) : digits;
+  });
+  document.getElementById('enterpriseCardCvc').addEventListener('input',e=>{
+    e.target.value=e.target.value.replace(/\D/g,'').slice(0,4);
+  });
+
+  document.getElementById('enterpriseConfirm').addEventListener('click',()=>{
+    const company = document.getElementById('enterpriseCompany').value.trim() || 'Company';
+    const billing = document.getElementById('enterpriseBillingEmail').value.trim();
+    const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(billing);
+    if(!validEmail){
+      showToast('Check billing email','Enter a valid billing contact before confirming the enterprise order.');
+      return;
+    }
+    const recurring = (enterprise.baseMonthly + enterprise.analyticsMonthly) * enterprise.users * 12;
+    const year1 = recurring + enterprise.implementation;
+    showToast(
+      'Enterprise order ready',
+      `${company}: ${enterprise.users} users · ${fmt(year1)} Year-1 · ${fmt(recurring)}/year thereafter · ${enterprise.payMethod==='invoice'?'invoice':'corporate card'}.`
+    );
+  });
+
+  updateEnterprise();
+
+  // Initial state
+  selectPayment('card');
+</script>
+</body>
+</html>
